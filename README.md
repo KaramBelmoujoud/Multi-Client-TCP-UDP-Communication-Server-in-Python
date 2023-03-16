@@ -1,4 +1,4 @@
-# This a TCP communition project with two different machine in the same Network using Python 
+## This a TCP communition project with two different machines in the same Network using Python 
 
 ### Server side:
 
@@ -16,6 +16,6 @@ The Client side code has a mix of UDP and TCP:
 - Client.py is used to receive at first the machines IP from the UDP_Server.py which then make the Client communicate with Server's Ip Address and establish the communication and send msg to the server as an input 
 
 
-###NOTE:
+### NOTE:
 
 Order of running the scripts doesn't matter you can run in what ever order you please even after an interuption
