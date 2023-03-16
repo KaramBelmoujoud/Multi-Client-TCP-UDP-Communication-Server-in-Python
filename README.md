@@ -1,6 +1,6 @@
-This a TCP communition project with two different machine in the same Network using Python 
+# This a TCP communition project with two different machine in the same Network using Python 
 
-###Server side:
+### Server side:
 
 The Server side is gonna be running two different Codes :
 
@@ -9,7 +9,7 @@ The Server side is gonna be running two different Codes :
 
 The order of running doesn't matter
 
-###Client side:
+### Client side:
 
 The Client side code has a mix of UDP and TCP:
 
