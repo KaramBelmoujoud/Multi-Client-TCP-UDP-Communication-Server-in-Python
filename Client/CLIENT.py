@@ -9,22 +9,22 @@ from collections import deque, Counter
 import tensorflow as tf
 import threading
 
-mp_hands = mp.solutions.hands 
-mp_drawing = mp.solutions.drawing_utils  
+mp_hands = mp.solutions.hands
+mp_drawing = mp.solutions.drawing_utils
 
 actions = ['stop', 'goLeft', 'goRight', 'modeDiaPo', 'modeNormal']
 poses = ['left-right', 'up-down', 'stop']
-
+message = ['lwlhada']
 
 def mediapipe_detection(image, model):
-    image = cv2.flip(image, 1)                     
+    image = cv2.flip(image, 1)
     debug_image = copy.deepcopy(image)
     # COLOR CONVERSION BGR 2 RGB
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-    image.flags.writeable = False                  
-    results = model.process(image)                 
-    image.flags.writeable = True                   
-    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)  
+    image.flags.writeable = False
+    results = model.process(image)
+    image.flags.writeable = True
+    image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     return image, results, debug_image
 
 
@@ -92,7 +92,7 @@ def pre_process_Keypoint_history(image, point_history):
 class PoseClassifier(object):
     def __init__(
         self,
-        model_path='keypoint_classifier.tflite',
+        model_path='Model/Sign_classifier_MetaData.tflite',
         num_threads=1,
     ):
         self.interpreter = tf.lite.Interpreter(model_path=model_path,
@@ -119,12 +119,12 @@ class PoseClassifier(object):
         result_index = np.argmax(np.squeeze(result))
 
         return result_index
-    
+
 
 class Classifier(object):
     def __init__(
         self,
-        model_path='Gestures_classifier.tflite',
+        model_path='Model/Gestures_classifier_MetaData.tflite',
         score_th=0.8,
         invalid_value=0,
         num_threads=1,
@@ -164,7 +164,7 @@ class Classifier(object):
 Pose_classifier = PoseClassifier()
 keypoint_classifier = Classifier()
 
-##################################################################   
+##################################################################
 history_length = 16  # lenght of list that takes max indexes of predections
 Keypoints_history = deque(maxlen=history_length)
 Argmax_list = deque(maxlen=history_length)
@@ -175,95 +175,123 @@ cap.set(cv2.CAP_PROP_FRAME_WIDTH, 960)
 cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 540)
 most_common_fg_id = None
 ActionDetected = 0
+class Client:
+    def __init__(self):
+        self.chivariable = False
+        self.addr = ""
+        self.thread1 = threading.Thread(target=self.Ai)
+        self.thread2 = None
+        self.message = ""
 
-def Ai():
-    global message
-    with mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5, max_num_hands=1) as hands:
+    def tcpp(self, addr):
+        while True:
+            clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                clientSocket.connect((addr[0], 9090))
+                while True:
+                    try:
+                        data = self.message
+                        clientSocket.send(data.encode())
+                    except:
+                        rp, addr = clientSocket.recvfrom(1024)
 
-        while cap.isOpened():
-            key = cv2.waitKey(10)
-            if key == 27:
+                        break
+            except:
                 break
+            break
+        return 0
 
-            ret, frame = cap.read()
-            if not ret:
-                break
+    def Ai(self):
+        # code for the Ai() function goes here
+        with mp_hands.Hands(min_detection_confidence=0.7, min_tracking_confidence=0.5, max_num_hands=1) as hands:
 
-            # Make detections
-            image, results, debug_image = mediapipe_detection(frame, hands)
-            if results.multi_hand_landmarks:
-                for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
-                                                        results.multi_handedness):
+            while cap.isOpened():
+                key = cv2.waitKey(10)
+                if key == 27:
+                    break
 
-                    # Landmark calculation
-                    landmark_list = calc_landmark_list(debug_image, hand_landmarks)
+                ret, frame = cap.read()
+                if not ret:
+                    break
 
-                    # Conversion to relative coordinates / normalized coordinates
-                    pre_processed_landmark_list = pre_process_landmark(
-                        landmark_list)
-                    pre_processed_Keypoints_list = pre_process_Keypoint_history(
-                        debug_image, Keypoints_history)
+                # Make detections
+                image, results, debug_image = mediapipe_detection(frame, hands)
+                if results.multi_hand_landmarks:
+                    for hand_landmarks, handedness in zip(results.multi_hand_landmarks,
+                                                          results.multi_handedness):
 
-                    hand_id = Pose_classifier(pre_processed_landmark_list)
+                        # Landmark calculation
+                        landmark_list = calc_landmark_list(
+                            debug_image, hand_landmarks)
 
-                    hand_sign_id = 0
-                    hand_sign_len = len(pre_processed_Keypoints_list)
+                        # Conversion to relative coordinates / normalized coordinates
+                        pre_processed_landmark_list = pre_process_landmark(
+                            landmark_list)
+                        pre_processed_Keypoints_list = pre_process_Keypoint_history(
+                            debug_image, Keypoints_history)
 
-                    if hand_sign_len == (history_length * 2):
+                        hand_id = Pose_classifier(pre_processed_landmark_list)
+
+                        hand_sign_id = 0
+                        hand_sign_len = len(pre_processed_Keypoints_list)
+                        
+                        if hand_id in (0, 1):
+                            landmark_index = 8 if hand_id == 0 else 12
+                            Keypoints_history.append(
+                                landmark_list[landmark_index])
+                        else:
+                            Keypoints_history.append([0, 0])
+
+                        if hand_sign_len == (history_length * 2):
                             hand_sign_id = keypoint_classifier(
                                 pre_processed_Keypoints_list)
 
-                    Argmax_list.append(hand_sign_id)
-                    most_common_fg_id = Counter(
-                        Argmax_list).most_common()
-                    if hand_id in (0, 1):
-                        landmark_index = 8 if hand_id == 0 else 12
-                        Keypoints_history.append(landmark_list[landmark_index])
-                        action_detected = [1, 2] if hand_id == 0 else [3, 4]
+                        action_detected = [
+                            1, 2,0] if hand_id == 0 else [3, 4,0]
+                        Argmax_list.append(hand_sign_id)
+                        most_common_fg_id = Counter(
+                            Argmax_list).most_common()
                         ActionDetected = most_common_fg_id[0][0] if most_common_fg_id[0][0] in action_detected else 0
-                    else:
-                        Keypoints_history.append([0, 0])
-                        ActionDetected = 0
-                        # Drawing part
+                        if (message[-1] != actions[ActionDetected]):
+                            print(message[-1])
+                            message.append(actions[ActionDetected])
+                            message.append(actions[ActionDetected])
+                            if message[-1] == "goLeft":
+                                self.message = actions[ActionDetected]
+                            elif message[-1] == "goRight":
+                                self.message = actions[ActionDetected]
+                            elif message[-1] == "modeDiaPo":
+                                self.message = actions[ActionDetected]
+                            elif message[-1] == "modeNormal":
+                                self.message = actions[ActionDetected]
+                            elif message[-1] == "stop":
+                                self.message = actions[ActionDetected]
 
-            # Screen reflection
-                cv2.imshow('Hand Gesture Recognition', debug_image)
+                     
+
+                    cv2.imshow('Hand Gesture Recognition', debug_image)
+
+        cap.release()
+
+        cv2.destroyAllWindows()
+        pass
+
+    def start(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        sock.bind(("0.0.0.0", 5005))
+        while True:
+            data, self.addr = sock.recvfrom(1024)
+            resp = b'response'
+            if (data == resp):
+                if not self.chivariable:
+                    self.thread2 = threading.Thread(
+                        target=self.tcpp, args=(self.addr,))
+                    self.thread2.start()
+                    # self.thread2.start()
+                    self.thread1.start()
+                    self.chivariable = True
 
 
-    cap.release()
-
-    cv2.destroyAllWindows()
-
-def tcpp():
-    while True:
-        clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            clientSocket.connect((addr[0], 9090))
-            while True:
-                try:
-                    data = actions[Ai()]
-                    print(data)
-                    clientSocket.send(data.encode())
-                except:
-                    clientSocket.close()
-                    break
-        except:
-            break
-        break
-    return 0
-
-chivariable = False
-thread1 = threading.Thread(target=Ai)
-while True:
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sock.bind(("0.0.0.0", 5005))
-    while True:
-        data, addr = sock.recvfrom(1024)
-        resp = b'response'
-        if (data == resp):
-            tcpp()
-            if chivariable == False:
-                thread1.start()
-                chivariable = True
-
+client = Client()
+client.start()
