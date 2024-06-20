@@ -21,7 +21,7 @@ setup(
     url="https://github.com/KaramBelmoujoud/Multi-Client-TCP-UDP-Communication-Server-in-Python",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: GPL-3.0 license",
+        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
