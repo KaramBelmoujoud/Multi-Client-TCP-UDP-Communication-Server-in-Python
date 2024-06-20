@@ -85,3 +85,12 @@ python client.py
 ## Contributing
 
 Contributions are welcome! Please fork this repository and submit a pull request with your improvements.
+
+## License
+This project is licensed under the GNU General Public License v3.0.
+
+You should have received a copy of the GNU General Public License along with this program. If not, see https://www.gnu.org/licenses/.
+
+```perl
+This `README.md` now correctly reflects the use of the GPL-3.0 license. Make sure to include the full license text in your repository, typically in a file named `LICENSE`.
+```
