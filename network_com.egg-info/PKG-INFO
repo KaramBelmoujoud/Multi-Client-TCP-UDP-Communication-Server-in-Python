@@ -1,3 +1,16 @@
+Metadata-Version: 2.1
+Name: network-com
+Version: 1.2.0
+Summary: A package for client-server communication over TCP and UDP
+Home-page: https://github.com/KaramBelmoujoud/Multi-Client-TCP-UDP-Communication-Server-in-Python
+Author: Karam Belmoujoud
+Author-email: karam.bd.kb@gmail.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+
 # Network Package
 
 This package provides a client-server communication system using TCP and UDP.
@@ -108,7 +121,7 @@ python combined_script.py client
 
 ## Using the Package in Other Projects
 
-You can import and use the package in any other Python project. Here’s an example:
+You can import and use the package in any other Python project. Hereâ€™s an example:
 
 ```python
 # another_script.py

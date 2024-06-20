@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="networkcom",
-    version="0.1.0",
+    name="network-com",
+    version="1.2.0",
     packages=find_packages(),
     install_requires=[
         "inputimeout"
