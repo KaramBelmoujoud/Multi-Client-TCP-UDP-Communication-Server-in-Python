@@ -1,3 +1,0 @@
-[console_scripts]
-run-client = my_network_package.client:udp_listener
-run-server = my_network_package.server:send_ip
