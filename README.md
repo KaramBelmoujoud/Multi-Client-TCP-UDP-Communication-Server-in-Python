@@ -7,7 +7,7 @@ This package provides a client-server communication system using TCP and UDP.
 To install the package, run:
 
 ```bash
-pip install network-com
+pip install network_com
 ```
 
 ## Usage

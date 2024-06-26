@@ -1,16 +1,16 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="network-com",
-    version="1.2.0",
+    name="network_com",
+    version="1.2.1",
     packages=find_packages(),
     install_requires=[
         "inputimeout"
     ],
     entry_points={
         'console_scripts': [
-            'run-client=my_network_package.client:udp_listener',
-            'run-server=my_network_package.server:send_ip'
+            'run-client=network_com.client:udp_listener',
+            'run-server=network_com.server:send_ip'
         ]
     },
     author="Karam Belmoujoud",
