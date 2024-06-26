@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="network_com",
-    version="1.2.3b1",
+    version="1.2.3c2",
     packages=find_packages(),
     install_requires=[
         "inputimeout"
