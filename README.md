@@ -47,7 +47,7 @@ To start the client, you can start the client using the package in your own scri
 ```python
 # my_script.py
 
-from network-com import client
+from network_com import client
 
 def start_client():
     client.udp_listener()
@@ -69,7 +69,7 @@ Here is an example script (combined_script.py) that allows you to run either the
 ```python
 # combined_script.py
 
-from network-com import client, server
+from network_com import client, server
 import threading
 import argparse
 
@@ -113,7 +113,7 @@ You can import and use the package in any other Python project. Here’s an exam
 ```python
 # another_script.py
 
-from network-com import client, server
+from network_com import client, server
 import threading
 
 def main():
