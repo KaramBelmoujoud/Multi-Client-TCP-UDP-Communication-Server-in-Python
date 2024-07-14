@@ -6,6 +6,7 @@ def tcpp(addr):
     try:
         client_socket.connect((addr[0], 9090))
         print(f"Connected to server at {addr[0]}:9090")
+        client_socket.settimeout(60)  # Set timeout for client socket
         while True:
             try:
                 data = inputimeout(prompt='', timeout=5)
