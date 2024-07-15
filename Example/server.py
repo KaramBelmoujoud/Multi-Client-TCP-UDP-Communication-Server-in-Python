@@ -1,11 +1,20 @@
-# network_com/server.py
-
 import socket
 from time import sleep
 import threading
 from concurrent.futures import ThreadPoolExecutor
 import ssl
-from .config import MAX_THREADS, TCP_PORT, UDP_PORT
+import os
+
+MAX_THREADS = 10  # Maximum number of concurrent client threads
+
+# Determine the script's directory and set paths to the certificate and key files
+script_dir = os.path.dirname(os.path.abspath(__file__))
+CERT_FILE = os.path.join(script_dir, 'server.crt')
+KEY_FILE = os.path.join(script_dir, 'server.key')
+
+# Check if certificate and key files exist
+if not os.path.isfile(CERT_FILE) or not os.path.isfile(KEY_FILE):
+    raise FileNotFoundError(f"Certificate or key file not found: {CERT_FILE}, {KEY_FILE}")
 
 def send_ip():
     broadcast_ip = socket.gethostbyname(socket.gethostname()).rsplit('.', 1)[0] + ".255"
@@ -14,7 +23,7 @@ def send_ip():
     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     while True:
         try:
-            udp_socket.sendto(msg, (broadcast_ip, UDP_PORT))
+            udp_socket.sendto(msg, (broadcast_ip, 5005))
             sleep(1)
         except Exception as e:
             print(f"Error broadcasting IP: {e}")
@@ -41,15 +50,15 @@ def handle_client(client_socket, client_address):
         client_socket.close()
         print(f"Connection with {client_address} closed")
 
-def tcp_server(certfile, keyfile):
+def tcp_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind(("0.0.0.0", TCP_PORT))
+    server_socket.bind(("0.0.0.0", 9090))
     server_socket.listen()
-    print(f"TCP server listening on port {TCP_PORT}")
+    print("TCP server listening on port 9090")
 
     # Wrap the socket with SSL
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    context.load_cert_chain(certfile=certfile, keyfile=keyfile)
+    context.load_cert_chain(certfile=CERT_FILE, keyfile=KEY_FILE)
     server_socket = context.wrap_socket(server_socket, server_side=True)
 
     with ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
@@ -60,18 +69,10 @@ def tcp_server(certfile, keyfile):
             except Exception as e:
                 print(f"Error accepting connections: {e}")
 
-def main(certfile, keyfile):
+if __name__ == "__main__":
     udp_thread = threading.Thread(target=send_ip)
-    tcp_thread = threading.Thread(target=tcp_server, args=(certfile, keyfile))
+    tcp_thread = threading.Thread(target=tcp_server)
     udp_thread.start()
     tcp_thread.start()
     udp_thread.join()
     tcp_thread.join()
-
-if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="Run network server.")
-    parser.add_argument('--certfile', required=True, help="Path to the SSL certificate file")
-    parser.add_argument('--keyfile', required=True, help="Path to the SSL key file")
-    args = parser.parse_args()
-    main(args.certfile, args.keyfile)
