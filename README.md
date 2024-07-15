@@ -9,7 +9,9 @@ To install the package, run:
 ```bash
 pip install network_com
 ```
+
 ## Generating SSL Certificates
+
 To use SSL/TLS with this package, you need to generate SSL certificates. For development purposes, you can create self-signed certificates using OpenSSL:
 
 ### Generate a Private Key
@@ -23,6 +25,7 @@ openssl genpkey -algorithm RSA -out server.key
 ```bash
 openssl req -new -key server.key -out server.csr -subj "/CN=example.com"
 ```
+
 ###Generate a Self-Signed Certificate
 
 ```bash
@@ -30,7 +33,6 @@ openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
 ```
 
 You will have server.key and server.crt files to be used by the server.
-
 
 ## Using OpenSSL
 
@@ -53,7 +55,6 @@ brew install openssl
 ### On Windows:
 
 Download and install from OpenSSL for Windows.
-
 
 ## Usage
 
