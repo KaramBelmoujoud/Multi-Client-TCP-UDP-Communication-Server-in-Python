@@ -1,16 +1,22 @@
 import socket
 from inputimeout import inputimeout, TimeoutOccurred
 import ssl
-from .config import TCP_PORT, UDP_PORT
+import os
 
-def tcpp(addr, certfile):
+TCP_PORT = 9090
+UDP_PORT = 5005
+
+# Determine the script's directory and set the path to the certificate file
+script_dir = os.path.dirname(os.path.abspath(__file__))
+CERT_FILE = os.path.join(script_dir, 'server.crt')
+
+def tcpp(addr):
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     # Wrap the socket with SSL
     context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
-    context.check_hostname = False
-    # context.verify_mode = ssl.CERT_NONE
-    context.load_verify_locations(certfile)
+    context.check_hostname = False  # Disable hostname checking
+    context.verify_mode = ssl.CERT_NONE  # Disable certificate verification (not recommended for production)
     client_socket = context.wrap_socket(client_socket)
 
     try:
@@ -32,7 +38,7 @@ def tcpp(addr, certfile):
         client_socket.close()
         print("Connection closed, waiting for new server broadcast")
 
-def udp_listener(certfile):
+def udp_listener():
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     udp_socket.bind(("0.0.0.0", UDP_PORT))
@@ -41,16 +47,9 @@ def udp_listener(certfile):
         try:
             data, addr = udp_socket.recvfrom(1024)
             if data == b'response':
-                tcpp(addr, certfile)
+                tcpp(addr)
         except Exception as e:
             print(f"Error receiving UDP broadcast: {e}")
 
-def main(certfile):
-    udp_listener(certfile)
-
 if __name__ == "__main__":
-    import argparse
-    parser = argparse.ArgumentParser(description="Run network client.")
-    parser.add_argument('--certfile', required=True, help="Path to the SSL certificate file")
-    args = parser.parse_args()
-    main(args.certfile)
+    udp_listener()
